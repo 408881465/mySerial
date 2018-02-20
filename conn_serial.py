@@ -76,7 +76,7 @@ import time
 import re
 
 
-ser = serial.Serial('com10',115200,timeout=2)
+ser = serial.Serial('com3',115200,timeout=2)
 print(ser.portstr)
 #单个标签识别BB 00 22 00 00 22 7E  返回
 #单个标签识别187 00 34 00 00 34 126 返回 BB 01 FF 00 01 15 16 7E
@@ -90,7 +90,7 @@ ser.write(read_one_cmd)
 rec_data  = ser.read(960)
 # time.sleep(2)
 ser.write(stop_cmd)
-str_rec_data = "".join(map(str,rec_data))
+str_rec_data = ",".join(map(str,rec_data))
 print(type(str_rec_data))
 str_rec_data.maketrans("126","end")
 # s = "187,2,34,0,17,188,52,0,0,0,0,0,0,0,0,0,0,0,0,2,208,74,65,126,187,2,34,0,17,214,52,0,0,0,0,0,0,0,0,0,0,0,0,1,224,41,73,126"
@@ -106,10 +106,10 @@ print(s)
 for i in s:
     print(i)
 
-    if i.index('0000000000002') > -1 :
-        print('This is Card 2')
-    elif i.index('0000000000001') > -1:
-        print('This is Card 1')
+    # if i.index('0000000000002') > -1 :
+    #     print('This is Card 2')
+    # elif i.index('0000000000001') > -1:
+    #     print('This is Card 1')
 
 
 # print(s)
