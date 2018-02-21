@@ -12,7 +12,7 @@
 -------------------------------------------------
 """
 #停止识别   BB 00 28 00 00 28 7E   返回BB 01 28 00 01 00 2A 7E
-#多标签识别  BB 00 27 00 03 22 FF FF 4A 7E
+#多标签识别  BB 00 27 00 03 22 FF FF 4A 7E 返回
 #单个标签识别BB 00 22 00 00 22 7E 返回 BB 01 FF 00 01 15 16 7E
 #单个标签识别187 00 34 00 00 34 126 返回 BB 01 FF 00 01 15 16 7E
 #单个标签识别187 00 34 00 00 34 126 返回 BB 01 FF 00 01 15 16 7E
@@ -76,8 +76,26 @@ import time
 import re
 
 
-ser = serial.Serial('com3',115200,timeout=2)
+ser = serial.Serial('com9',115200,bytesize = 8,stopbits= 1,timeout = 2)
+print(ser.writable())
+
 print(ser.portstr)
+
+
+#convert hex string to integer
+def my_int_convert(hex_str):
+    my_dec = int(hex_str,16)
+    return my_dec
+
+#函数功能
+#将十六进制的字符串切片成list，然后将每一项map成每一项是十进制的list
+#例如将字符串 'BB  00  03  00 01 00 04 7E' 转换成列表 [187, 0, 3, 0, 1, 0, 4, 126]
+def hex_str_to_dec(hex_str):
+    hex_str_list = re.split(r'[\s\,]+', hex_str)
+    #print(hex_str_list)
+    map_str_to_int = map(my_int_convert,hex_str_list)
+    return list(map_str_to_int)
+
 #单个标签识别BB 00 22 00 00 22 7E  返回
 #单个标签识别187 00 34 00 00 34 126 返回 BB 01 FF 00 01 15 16 7E
 #单个标签识别BB 00 28 00 00 28 7E
@@ -85,14 +103,24 @@ print(ser.portstr)
 # 187,2,34,0,17,216,52,0,0,0,0,0,0,0,0,0,0,0,0,2,208,74,93,126
 # 187,2,34,0,17,219,52,0,0,0,0,0,0,0,0,0,0,0,0,1,224,41,78,126
 read_one_cmd = bytes([187,0,34,0,0,34,126])
+#read_multi_tag_cmd = bytes([187,0,27,0,3,22,00,20,74,126]) #返回 0xbb0x10xff0x00x10x170x180x7e
+read_multi_tags_cmd_str = 'BB 00 27 00 03 22 FF FF 4A 7E'
+read_multi_tags_cmd_bytes =hex_str_to_dec(read_multi_tags_cmd_str)
+
+stop_read_cmd_str = 'BB 00 28 00 00 28 7E'
+stop_read_cmd_bytes = hex_str_to_dec(stop_read_cmd_str)
+
+read_multi_tag_cmd = bytes([187, 0, 39, 0, 3, 34, 255, 255, 74, 126]) #返回 0xbb0x10xff0x00x10x170x180x7e
 stop_cmd = bytes([187,0,40,0,0,34,126])
-ser.write(read_one_cmd)
-rec_data  = ser.read(960)
-# time.sleep(2)
+#bb 00 39 00 09 00 00 00 00 01 00 00 00 08 4B 7E 读 EPC
+
+ser.write(stop_read_cmd_bytes)
+rec_data  = ser.read(9600)
+time.sleep(3)
 ser.write(stop_cmd)
-str_rec_data = ",".join(map(str,rec_data))
+str_rec_data = "".join(map(str,rec_data))
 print(type(str_rec_data))
-str_rec_data.maketrans("126","end")
+# str_rec_data.maketrans("0x","  ")
 # s = "187,2,34,0,17,188,52,0,0,0,0,0,0,0,0,0,0,0,0,2,208,74,65,126,187,2,34,0,17,214,52,0,0,0,0,0,0,0,0,0,0,0,0,1,224,41,73,126"
 # t = "187,2,34,0,17,188,52,0,0,0,0,0,0,0,0,0,0,0,0,2,208,74,65,126,187,2,34,0,17,214,52,0,0,0,0,0,0,0,0,0,0,0,0,1,224,41,73,126"
 # bool = (s == t)
@@ -100,23 +128,32 @@ str_rec_data.maketrans("126","end")
 # s = "18723401721352000000000000122441721261872340171975200000000000022087474126"
 # t = re.sub('126','126end',s)
 # print(t)
-str_rec_data = re.sub('126','126end',str_rec_data)
-s = re.split('end',str_rec_data)
-print(s)
-for i in s:
-    print(i)
-
-    # if i.index('0000000000002') > -1 :
-    #     print('This is Card 2')
-    # elif i.index('0000000000001') > -1:
-    #     print('This is Card 1')
-
-
+# str_rec_data = re.sub('7e','7end',str_rec_data)
+# s = re.split('end',str_rec_data)
 # print(s)
-# if '1872340172085200000000000022087485126' in str_rec_data:
-#     print('Card 2')
-# if '1872340172115200000000000012244170126' in str_rec_data:
-#     print('Card 1')
+# for i in s:
+#     print(i)
+#
+#     if i.index('0000000000002') > -1 :
+#         print('This is Card 2')
+#     elif i.index('0000000000001') > -1:
+#         print('This is Card 1')
+
+
+
+if '00000001' in str_rec_data:
+    print('this is Card 1')
+if '00000002' in str_rec_data:
+    print('This is Card 2')
+if '00000003' in str_rec_data:
+    print('this is Card 3')
+if '00000004' in str_rec_data:
+    print('This is Card 4')
+if '00000005' in str_rec_data:
+    print('This is Card 5')
+if '00000006' in str_rec_data:
+    print('This is Card 6')
+
 print(str_rec_data)
 
 # for i in str_rec_data:
