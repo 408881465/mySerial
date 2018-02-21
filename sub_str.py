@@ -21,6 +21,7 @@ if has_abc == True:
     print("String contains string.000002")
 
 hex_list = 'BB  00  03  00 01 00 04 7E'
+read_multi_tags_cmd = 'BB 00 27 00 03 22 FF FF 4A 7E'
 
 #convert hex string to integer
 def my_int_convert(hex_str):
@@ -37,7 +38,7 @@ def hex_str_to_dec(hex_str):
     return list(map_str_to_int)
 
 
-hex_cmd_list = hex_str_to_dec(hex_list)
+hex_cmd_list = hex_str_to_dec(read_multi_tags_cmd)
 print(hex_cmd_list)
 
 
